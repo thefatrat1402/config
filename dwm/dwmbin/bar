@@ -1,0 +1,31 @@
+#!/bin/bash
+
+memory() {
+	printf "  $(free -h | awk '/^Mem/ { print $3 }' | sed s/i//g) "
+}
+
+wlan() {
+	case "$(cat /sys/class/net/w*/operstate 2>/dev/null)" in
+		up) printf "  " ;;
+		down) printf " 睊" ;;
+	esac
+}
+
+clock() {
+	printf " $(date '+%a, %I:%M %p') "
+}
+
+battery() {
+	BAT=$(upower -i `upower -e | grep 'BAT'` | grep 'percentage' | cut -d':' -f2 | tr -d '%,[:blank:]')
+	AC=$(upower -i `upower -e | grep 'BAT'` | grep 'state' | cut -d':' -f2 | tr -d '[:blank:]')
+	if [[ "$AC" == "charging" ]]; then
+		printf "  $BAT%%"
+	elif [[ "$AC" == "fully-charged" ]]; then
+		printf "  Full"
+	else
+    printf " $BAT%%"
+  fi
+ }
+while true; do
+    sleep 1 && xsetroot -name "[$(battery)][$(memory)][$(wlan)][$(clock)]"
+done
